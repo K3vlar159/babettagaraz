@@ -1,8 +1,10 @@
 package com.example.babettahub.domain.blog;
 
+import com.example.babettahub.common.ForbiddenException;
 import com.example.babettahub.common.ResourceNotFoundException;
 import com.example.babettahub.domain.blog.dto.BlogPostRequest;
 import com.example.babettahub.domain.blog.dto.BlogPostResponse;
+import com.example.babettahub.domain.listing.Listing;
 import com.example.babettahub.domain.user.User;
 import com.example.babettahub.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +69,7 @@ public class BlogPostService {
     public BlogPostResponse update(Long id, BlogPostRequest request){
         BlogPost post = blogPostRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Článok s ID " + id +  " neexistuje"));
 
+        checkOwner(post);
         Set<Tag> tags = resolveTags(request.tagIds());
 
         post.setTags(tags);
@@ -81,7 +84,7 @@ public class BlogPostService {
     @Transactional
     public BlogPostResponse archive(Long id){
         BlogPost post = blogPostRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Článok s ID " + id +  " neexistuje"));
-
+        checkOwner(post);
         post.setStatus(BlogStatus.ARCHIVED);
 
         BlogPost savedPost = blogPostRepository.save(post);
@@ -102,6 +105,12 @@ public class BlogPostService {
 
     private String getCurrentUsername() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    private void checkOwner(BlogPost post) {
+        if (!post.getAuthor().getUsername().equals(getCurrentUsername())) {
+            throw new ForbiddenException("Môžeš upravovať len svoje inzeráty");
+        }
     }
 
 }

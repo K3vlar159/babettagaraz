@@ -49,7 +49,9 @@ public class ListingService {
     public ListingResponse getById(Long listingId){
 
         Listing listing = listingRepository.findById(listingId).orElseThrow(() -> new ResourceNotFoundException("Inzerát s týmto ID neexistuje"));
-
+        if (listing.getStatus() == ListingStatus.ARCHIVED) {
+            throw new ResourceNotFoundException("Inzerát s týmto ID neexistuje");
+        }
         return mapToResponse(listing);
     }
 

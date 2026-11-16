@@ -1,5 +1,6 @@
 package com.example.babettahub.domain.listing;
 
+import com.example.babettahub.common.ForbiddenException;
 import com.example.babettahub.common.ResourceNotFoundException;
 import com.example.babettahub.domain.listing.dto.ListingRequest;
 import com.example.babettahub.domain.listing.dto.ListingResponse;
@@ -54,6 +55,16 @@ class ListingServiceTest {
 
         assertThrows(ResourceNotFoundException.class,
                 () -> listingService.getById(99L));
+    }
+
+    @Test
+    void getById_existsButArchived_throwsNotFound() {
+        Listing archivedListing = createTestListing();
+        archivedListing.setStatus(ListingStatus.ARCHIVED);
+        when(listingRepository.findById(1L)).thenReturn(Optional.of(archivedListing));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> listingService.getById(1L));
     }
 
     @Test
@@ -132,6 +143,22 @@ class ListingServiceTest {
 
         verify(listingRepository, times(1)).save(listing);
 
+    }
+
+    @Test
+    void update_notOwner_throwsForbidden() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("cudzi", null, List.of()));
+
+        Listing listing = createTestListing();
+        when(listingRepository.findById(1L)).thenReturn(Optional.of(listing));
+
+        ListingRequest request = new ListingRequest(
+                "Babetta 210", "Pekný stav", 500, "0900123456", "predaj@example.com");
+
+        assertThrows(ForbiddenException.class, () -> listingService.update(1L, request));
+
+        verify(listingRepository, never()).save(any());
     }
 
     private static @NonNull Listing createTestListing() {
