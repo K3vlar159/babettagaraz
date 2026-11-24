@@ -30,7 +30,9 @@ public class BlogPostService {
     public BlogPostResponse getById(Long blogPostId){
 
         BlogPost blogPost = blogPostRepository.findById(blogPostId).orElseThrow(() -> new ResourceNotFoundException("Článok s ID " + blogPostId + " neexistuje"));
-
+        if (blogPost.getStatus() == BlogStatus.ARCHIVED) {
+            throw new ResourceNotFoundException("Článok s ID " + blogPostId + " neexistuje");
+        }
         return mapToResponse(blogPost);
     }
 
@@ -108,7 +110,7 @@ public class BlogPostService {
 
     private void checkOwner(BlogPost post) {
         if (!post.getAuthor().getUsername().equals(getCurrentUsername())) {
-            throw new ForbiddenException("Môžeš upravovať len svoje inzeráty");
+            throw new ForbiddenException("Môžeš upravovať len svoje články");
         }
     }
 
