@@ -70,8 +70,7 @@ class ListingControllerTest {
           "title": "",
           "description": "Pekný stav",
           "price": 500,
-          "contactEmail": "predaj@example.com",
-          "userId": 1
+          "contactEmail": "predaj@example.com"
         }
         """;
 
